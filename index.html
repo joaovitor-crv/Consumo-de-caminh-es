@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Consumo Combustível Caminhões CRV</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: réplica do painel Power BI — faixa de KPIs no topo, 3 colunas (tabela | ocioso+km/L+consumo | RPM+excessos) */
+:root{
+  --bg:#eef0f4; --card:#ffffff; --line:#d9dde6; --ink:#1d2433; --muted:#5b6475;
+  --navy:#22378c; --navy-2:#2a44a8; --green:#2e7d32; --red:#d64550; --yellow:#d9b51f; --gray:#6b6b6b;
+  --ton:#e8edfb; --font:"Segoe UI","Segoe UI Web",Tahoma,Arial,sans-serif;
+  color-scheme:light;
+}
+body{background:var(--bg);color:var(--ink);font-family:var(--font)}
+.pg{padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1500px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+.top{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:stretch}
+.logo{background:var(--card);border-radius:8px;display:flex;align-items:center;justify-content:center;padding:6px 10px}
+.logo-box{border:2px solid var(--navy);border-radius:6px;padding:4px 12px;text-align:center;line-height:1}
+.logo-box b{display:block;color:var(--navy);font-size:20px;letter-spacing:.02em;font-weight:800}
+.logo-box small{display:block;color:var(--navy);font-size:8px;font-style:italic;text-align:right;margin-top:2px}
+.hdr{display:flex;flex-direction:column;gap:6px;min-width:0}
+.hdr-row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.hdr h1{margin:0;color:var(--navy);font-size:13px;font-weight:700;letter-spacing:.01em;text-transform:uppercase}
+.periodo{background:#111;color:#fff;font-weight:700;font-style:italic;font-size:12px;padding:3px 16px;border-radius:4px;white-space:nowrap}
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.kpi{background:var(--card);border-radius:8px;display:flex;align-items:center;gap:8px;padding:6px 8px;min-width:0;box-shadow:0 1px 2px rgba(20,30,60,.06)}
+.kpi svg{flex:none;width:30px;height:30px}
+.kpi div{display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;text-align:center}
+.kpi .v{font-weight:700;font-size:13px;color:var(--navy);white-space:nowrap;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:12px;font-weight:600;color:var(--navy);white-space:nowrap}
+.kpi .v.gray{color:var(--gray)} .kpi .v.green{color:var(--green)} .kpi .v.red{color:var(--red)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr) minmax(0,.82fr);gap:10px;align-items:start}
+.col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.card{background:var(--card);border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(20,30,60,.06);min-width:0}
+.card>h2{margin:0;background:var(--navy);color:#fff;text-align:center;font-size:12px;font-weight:600;padding:4px 8px;text-transform:uppercase;border-radius:10px 10px 0 0}
+.card>h3{margin:0;display:flex;justify-content:space-between;align-items:center;padding:8px 12px 0;color:var(--navy);font-size:12px;font-weight:700;text-transform:uppercase}
+.card>h3 span{color:var(--red);font-size:12px}
+.cb{padding:8px 12px 10px}
+.tw{overflow:auto;max-height:760px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+.tv th{font-size:12px;font-weight:700;padding:8px 6px;text-align:center;border-bottom:1px solid #8a93a6;position:sticky;top:0;background:var(--card);z-index:1}
+.tv td{font-size:12px;padding:2px 6px;text-align:right;white-space:nowrap}
+.tv td:first-child{text-align:left;padding-left:14px;border-right:1px solid var(--navy)}
+.tv td.i{font-style:italic}
+.tv td.ton{background:var(--ton)}
+.tv tr.g td{font-weight:700;text-align:left;padding:8px 6px 2px;border-right:none}
+.tv td.kg{color:var(--muted)} .tv td.ky{color:var(--yellow)} .tv td.kr{color:var(--red)} .tv td.kgn{color:var(--green)}
+.chart{width:100%;position:relative}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{font-family:var(--font);fill:var(--ink)}
+.split{display:grid;grid-template-columns:minmax(0,.55fr) minmax(0,1fr);gap:10px;align-items:start}
+.to{font-size:12px} .to th{font-weight:700;padding:4px 4px;border-bottom:1px solid #8a93a6;text-align:right;white-space:nowrap}
+.to th:first-child,.to td:first-child{text-align:left}
+.to td{padding:2px 4px;text-align:right;white-space:nowrap}
+.to-wrap{overflow-x:auto}
+.leg{display:flex;justify-content:center;gap:14px;font-size:12px;color:var(--ink);margin:4px 0}
+.leg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.note{font-size:11px;color:var(--muted);margin:6px 0 0}
+.foot{font-size:11px;color:var(--muted);background:var(--card);border-radius:8px;padding:8px 12px}
+.foot ul{margin:4px 0 0;padding-left:18px;display:grid;gap:2px}
+.tip{position:absolute;pointer-events:none;background:#fff;border:1px solid var(--line);border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.12);padding:4px 8px;font-size:12px;white-space:nowrap;z-index:5}
+@media (max-width:1250px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.grid .col:last-child{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}}
+@media (max-width:820px){.top{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid,.grid .col:last-child{grid-template-columns:minmax(0,1fr);display:grid}.split{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+
+
+<div class="pg">
+  <div class="top">
+    <div class="logo"><div class="logo-box"><b>CRV INDUSTRIAL</b><small>Açúcar Etanol e Energia</small></div></div>
+    <div class="hdr">
+      <div class="hdr-row"><h1>Acompanhamento consumo de combustível - caminhões</h1><span class="periodo" id="periodo"></span></div>
+      <div class="kpis" id="kpis"></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="col">
+      <section class="card"><h2>Acompanhamento por viagens</h2>
+        <div class="tw"><table class="tv"><thead><tr><th>Frotas</th><th>Litros</th><th>Km</th><th>Km/dia</th><th>Toneladas</th><th>Km/L</th><th>Viagens</th></tr></thead><tbody id="tab"></tbody></table></div>
+      </section>
+    </div>
+
+    <div class="col">
+      <section class="card"><h2>Registros de motor ocioso</h2>
+        <div class="cb">
+          <div class="chart" id="c-ocfx"></div>
+          <div class="split">
+            <div class="chart" id="c-octop"></div>
+            <div>
+              <div class="to-wrap"><table class="to"><thead><tr><th>Frota</th><th>Data</th><th>Ligado (h)</th><th>Ocioso (h)</th><th>% Ocioso</th></tr></thead><tbody id="t-oc"></tbody></table></div>
+              <div class="leg"><span><i style="background:var(--navy)"></i>Motor Ocioso</span><span><i style="background:var(--green)"></i>Meta</span></div>
+              <div class="chart" id="c-ocdia"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="card"><h3>Evolução da média de consumo (km/L)</h3>
+        <div class="cb"><div class="leg"><span><i style="background:var(--navy)"></i>km/L do dia</span><span><i style="background:#111b4d;border-radius:0"></i>Total</span><span><i style="background:var(--green)"></i>Meta</span></div><div class="chart" id="c-kml"></div></div>
+      </section>
+      <section class="card"><h3>Consumo diário (litros) <span id="lit-media"></span></h3>
+        <div class="cb"><div class="chart" id="c-lit"></div></div>
+      </section>
+    </div>
+
+    <div class="col">
+      <section class="card"><h3>Faixa de RPM do motor</h3>
+        <div class="cb"><div class="chart" id="c-rpm"></div></div>
+      </section>
+      <section class="card"><h2>Excessos de velocidade</h2>
+        <div class="cb">
+          <div class="chart" id="c-exfx"></div>
+          <div class="split" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
+            <div class="chart" id="c-extop"></div>
+            <div><div class="chart" id="c-turno"></div>
+              <div class="leg"><b>Turno:</b><span><i style="background:var(--red)"></i>A</span><span><i style="background:var(--yellow)"></i>B</span><span><i style="background:var(--gray)"></i>C</span></div></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="foot"><b>Regras e observações</b>
+    <ul>
+      <li>Litros, km e km/L: abastecimento com hodômetro (frotas sem hodômetro: relatório de consumo); viagens e toneladas: balança; motor ocioso e RPM: monit; excessos: rastreador.</li>
+      <li>Motor ocioso = velocidade 0 com RPM acima de 0. RPM 850 (falha do sistema) conta como motor desligado.</li>
+      <li>Turnos: A 07–15h, B 15–23h, C 23–07h.</li>
+    </ul><ul id="notas"></ul>
+  </div>
+</div>
+
+<script>
+const D={"periodo": "12/10/2026 - 23/10/2026", "K": {"litros": 129107.99999999999, "custo": 839201.9999999999, "frotas": 42, "km": 119560.20000000003, "kml": 0.997765379819086, "meta": 1.2, "custo_km": 6.514557561797319, "km_dia": 9963.350000000002, "ndias": 12, "excessos": 533, "custo_oc": 10350.291249999998}, "tabela": [{"grupo": "CANAVIEIRO", "linhas": [{"frota": 60500, "litros": 599.69, "custo": 3897.9850000000006, "km": 338.9000000000233, "km_dia": 30.809090909093026, "obs": "", "ton": 282.84000000000003, "kml": 0.8479071280242771, "viagens": 4}, {"frota": 60505, "litros": 332.01, "custo": 2158.065, "km": null, "km_dia": null, "obs": "", "ton": 68.58, "kml": null, "viagens": 1}, {"frota": 60506, "litros": 1825.86, "custo": 11868.09, "km": 1607.2999999999884, "km_dia": 146.11818181818077, "obs": "", "ton": 1372.56, "kml": 1.0478860384000968, "viagens": 20}, {"frota": 60513, "litros": 2982.98, "custo": 19389.37, "km": 2476.9000000000233, "km_dia": 225.1727272727294, "obs": "", "ton": 3472.14, "kml": 0.9424715287528292, "viagens": 50}, {"frota": 60515, "litros": 620.19, "custo": 4031.2350000000006, "km": 204.29999999998836, "km_dia": 18.572727272726215, "obs": "", "ton": 497.0, "kml": 0.5518936733480695, "viagens": 7}, {"frota": 60517, "litros": 2923.85, "custo": 19005.024999999998, "km": 2867.9000000000233, "km_dia": 260.71818181818395, "obs": "", "ton": 3081.62, "kml": 1.03952733928993, "viagens": 46}, {"frota": 60519, "litros": 3908.11, "custo": 25402.715, "km": 3385.4000000000233, "km_dia": 307.76363636363845, "obs": "", "ton": 4123.96, "kml": 0.9326170798898136, "viagens": 59}, {"frota": 60522, "litros": 3593.6499999999996, "custo": 23358.725, "km": 3165.2000000000116, "km_dia": 287.74545454545563, "obs": "", "ton": 3356.42, "kml": 1.0146042492082457, "viagens": 49}, {"frota": 60523, "litros": 5014.75, "custo": 32595.875, "km": 4540.899999999965, "km_dia": 412.80909090908773, "obs": "", "ton": 1922.38, "kml": 0.9277101541654849, "viagens": 28}, {"frota": 60525, "litros": 3466.08, "custo": 22529.52, "km": 3125.0, "km_dia": 284.09090909090907, "obs": "", "ton": 3633.34, "kml": 0.9942540072413508, "viagens": 52}, {"frota": 60526, "litros": 2698.0699999999997, "custo": 17537.454999999998, "km": 1838.5, "km_dia": 167.13636363636363, "obs": "", "ton": 2198.28, "kml": 0.8364155827612406, "viagens": 31}, {"frota": 60527, "litros": 2495.41, "custo": 16220.164999999999, "km": 2299.5, "km_dia": 209.04545454545453, "obs": "", "ton": 2664.2, "kml": 0.9547792942231598, "viagens": 38}, {"frota": 60528, "litros": 3493.81, "custo": 22709.765, "km": 3410.2999999999884, "km_dia": 310.0272727272717, "obs": "", "ton": 1357.68, "kml": 1.0404234547562354, "viagens": 19}, {"frota": 60529, "litros": 2051.91, "custo": 13337.414999999999, "km": 1779.0999999999767, "km_dia": 161.73636363636152, "obs": "", "ton": 2119.94, "kml": 0.9917498188304681, "viagens": 31}, {"frota": 60531, "litros": 1087.08, "custo": 7066.0199999999995, "km": 862.7999999999884, "km_dia": 78.43636363636257, "obs": "", "ton": 1505.28, "kml": 0.9207619657435445, "viagens": 22}, {"frota": 60532, "litros": 1122.96, "custo": 7299.24, "km": 881.0, "km_dia": 80.0909090909091, "obs": "", "ton": 861.52, "kml": 0.9176700970792884, "viagens": 13}, {"frota": 60534, "litros": 3395.31, "custo": 22069.515, "km": 3355.0999999999767, "km_dia": 305.0090909090888, "obs": "", "ton": 4054.8, "kml": 1.0817633991184865, "viagens": 59}, {"frota": 60535, "litros": 2723.31, "custo": 17701.515, "km": 2466.5999999999767, "km_dia": 224.23636363636152, "obs": "", "ton": 2493.24, "kml": 1.017868196261287, "viagens": 37}, {"frota": 60536, "litros": 3714.3, "custo": 24142.95, "km": 3279.2000000000116, "km_dia": 298.10909090909195, "obs": "", "ton": 4486.88, "kml": 0.9924188545055646, "viagens": 66}, {"frota": 60537, "litros": 780.02, "custo": 5070.13, "km": 458.69999999998254, "km_dia": 41.69999999999841, "obs": "", "ton": 770.02, "kml": 1.0125604291295613, "viagens": 11}, {"frota": 60538, "litros": 3414.91, "custo": 22196.915, "km": 3596.100000000006, "km_dia": 326.91818181818235, "obs": "", "ton": 2995.72, "kml": 1.0894301554121621, "viagens": 43}, {"frota": 60539, "litros": 2410.62, "custo": 15669.029999999999, "km": 2461.100000000006, "km_dia": 223.73636363636416, "obs": "", "ton": 1071.24, "kml": 1.1369663035544373, "viagens": 15}, {"frota": 60540, "litros": 2828.85, "custo": 18387.524999999998, "km": 2605.600000000006, "km_dia": 236.87272727272781, "obs": "", "ton": 2578.62, "kml": 0.9633102142825475, "viagens": 37}, {"frota": 60542, "litros": 1548.95, "custo": 10068.175000000001, "km": 1375.2999999999884, "km_dia": 125.02727272727167, "obs": "", "ton": 1846.3, "kml": 1.1011737953784715, "viagens": 27}, {"frota": 60544, "litros": 4375.6, "custo": 28441.4, "km": 4099.599999999977, "km_dia": 372.690909090907, "obs": "", "ton": 1795.16, "kml": 0.9794533639143674, "viagens": 26}, {"frota": 60545, "litros": 5303.57, "custo": 34473.205, "km": 4955.300000000047, "km_dia": 450.4818181818224, "obs": "", "ton": 1741.54, "kml": 0.9923361442815555, "viagens": 25}, {"frota": 60547, "litros": 4324.65, "custo": 28110.225, "km": 3916.1999999999825, "km_dia": 356.0181818181802, "obs": "", "ton": 3035.84, "kml": 1.006569613225583, "viagens": 44}, {"frota": 60548, "litros": 5899.5, "custo": 38346.75, "km": 5935.700000000012, "km_dia": 539.609090909092, "obs": "", "ton": 1850.96, "kml": 1.0436413954134445, "viagens": 26}, {"frota": 60549, "litros": 4243.85, "custo": 27585.025, "km": 3799.600000000035, "km_dia": 345.418181818185, "obs": "", "ton": 1272.44, "kml": 0.9475689803084499, "viagens": 18}, {"frota": 60550, "litros": 4951.34, "custo": 32183.71, "km": 4576.200000000012, "km_dia": 416.0181818181829, "obs": "", "ton": 1458.36, "kml": 0.9421225241027502, "viagens": 21}, {"frota": 60551, "litros": 2345.56, "custo": 15246.14, "km": 1817.7999999999884, "km_dia": 165.2545454545444, "obs": "", "ton": 1175.16, "kml": 0.855616483490616, "viagens": 17}, {"frota": 60552, "litros": 3453.58, "custo": 22448.27, "km": 3342.4000000000233, "km_dia": 303.8545454545476, "obs": "", "ton": 1130.52, "kml": 1.0400893710110635, "viagens": 16}, {"frota": 60553, "litros": 5780.76, "custo": 37574.94, "km": 5762.5, "km_dia": 523.8636363636364, "obs": "", "ton": 1983.92, "kml": 1.036467467062368, "viagens": 28}, {"frota": 60554, "litros": 4996.84, "custo": 32479.46, "km": 5207.300000000003, "km_dia": 473.39090909090936, "obs": "", "ton": 1560.38, "kml": 1.0864770918225772, "viagens": 22}, {"frota": 60555, "litros": 5416.97, "custo": 35210.305, "km": 5312.5, "km_dia": 482.95454545454544, "obs": "", "ton": 1659.94, "kml": 1.0230176565626221, "viagens": 23}, {"frota": 60556, "litros": 4196.64, "custo": 27278.160000000003, "km": 3988.5, "km_dia": 362.59090909090907, "obs": "", "ton": 4507.46, "kml": 1.004245097742998, "viagens": 66}, {"frota": 60557, "litros": 3575.0, "custo": 23237.5, "km": 3668.8999999999996, "km_dia": 333.5363636363636, "obs": "", "ton": 5464.82, "kml": 1.0848346683461512, "viagens": 78}]}, {"grupo": "TERCEIROS", "linhas": [{"frota": 20500, "litros": 2214.23, "custo": 14392.495, "km": 2035.0, "km_dia": 169.58333333333334, "obs": "", "ton": 3977.44, "kml": 0.9190553826838224, "viagens": 57}, {"frota": 20502, "litros": 2301.9, "custo": 14962.35, "km": 2048.0, "km_dia": 170.66666666666666, "obs": "", "ton": 3348.38, "kml": 0.8896998131977931, "viagens": 49}, {"frota": 20550, "litros": 2687.73, "custo": 17470.245, "km": 2712.0, "km_dia": 226.0, "obs": "", "ton": 3196.7400000000002, "kml": 1.0090299248808474, "viagens": 47}, {"frota": 20556, "litros": 2215.52, "custo": 14400.88, "km": 2136.0, "km_dia": 178.0, "obs": "", "ton": 4460.3, "kml": 0.9641077489708962, "viagens": 64}, {"frota": 46141, "litros": 1792.08, "custo": 11648.52, "km": 1866.0, "km_dia": 155.5, "obs": "", "ton": 3752.32, "kml": 1.0412481585643498, "viagens": 56}]}], "oc_faixa": [{"l": "Até 10%", "v": 18}, {"l": "10 a 20%", "v": 81}, {"l": "20 a 30%", "v": 63}, {"l": "30 a 40%", "v": 26}, {"l": "40 a 50%", "v": 18}, {"l": "Acima de 50%", "v": 49}], "oc_top": [{"l": "60536", "v": 43.791666666666664}, {"l": "60525", "v": 42.68416666666667}, {"l": "60513", "v": 37.72638888888889}, {"l": "60517", "v": 32.729166666666664}, {"l": "60534", "v": 32.56972222222222}, {"l": "60508", "v": 29.47611111111111}, {"l": "60527", "v": 28.375555555555554}, {"l": "60544", "v": 26.06888888888889}, {"l": "60547", "v": 25.005277777777778}, {"l": "60542", "v": 24.28611111111111}], "oc_tab": [{"frota": 60516, "data": "12/10", "lig": 12.431666666666667, "oc": 9.210833333333333, "pct": 0.7409170130044241}, {"frota": 60515, "data": "20/10", "lig": 11.047222222222222, "oc": 7.118333333333333, "pct": 0.6443550414885592}, {"frota": 60513, "data": "14/10", "lig": 14.85361111111111, "oc": 6.3758333333333335, "pct": 0.42924466553213775}, {"frota": 60525, "data": "22/10", "lig": 18.22222222222222, "oc": 5.977777777777778, "pct": 0.3280487804878049}, {"frota": 60513, "data": "19/10", "lig": 19.524444444444445, "oc": 5.938055555555556, "pct": 0.3041344183928978}], "oc_dia": [{"l": "12/10", "v": 0.24877318773329063}, {"l": "13/10", "v": 0.20035589811626708}, {"l": "14/10", "v": 0.22786768963081747}, {"l": "15/10", "v": 0.17980052837727276}, {"l": "16/10", "v": 0.284867138062325}, {"l": "17/10", "v": 0.21894509103705345}, {"l": "18/10", "v": 0.17335223736081332}, {"l": "19/10", "v": 0.2035895779402465}, {"l": "20/10", "v": 0.21937242614517058}, {"l": "21/10", "v": 0.19524384627909785}, {"l": "22/10", "v": 0.20108818516068275}, {"l": "23/10", "v": 0.35972298820367987}], "kml_dia": [{"l": "12/10 a 23/10", "v": 0.992274073788691}], "litros_dia": [{"l": "12/10", "v": 8831.03}, {"l": "13/10", "v": 11806.97}, {"l": "14/10", "v": 9758.92}, {"l": "15/10", "v": 7518.5599999999995}, {"l": "16/10", "v": 6035.3099999999995}, {"l": "17/10", "v": 11691.51}, {"l": "18/10", "v": 13619.73}, {"l": "19/10", "v": 16240.81}, {"l": "20/10", "v": 16096.07}, {"l": "21/10", "v": 14880.47}, {"l": "22/10", "v": 13450.16}], "litros_fonte": "abastecimento", "kml_est": {"dias": [{"l": "12/10", "v": 1.077814663603979, "km": 2655.80000000002, "lt": 2464.06}, {"l": "13/10", "v": 1.053213937033503, "km": 10032.600000000039, "lt": 9525.699999999999}, {"l": "14/10", "v": 1.021313551144533, "km": 8679.000000000104, "lt": 8497.88}, {"l": "15/10", "v": 1.0234862912569027, "km": 6696.199999999936, "lt": 6542.54}, {"l": "16/10", "v": 0.9670804929425767, "km": 4664.500000000071, "lt": 4823.28}, {"l": "17/10", "v": 1.0277122389019928, "km": 9839.799999999963, "lt": 9574.47}, {"l": "18/10", "v": 1.0328148228148777, "km": 13005.699999999892, "lt": 12592.48}, {"l": "19/10", "v": 1.0083177969132087, "km": 14240.200000000079, "lt": 14122.73}, {"l": "20/10", "v": 0.9622629599030447, "km": 13871.79999999991, "lt": 14415.81}, {"l": "21/10", "v": 0.9355294008031709, "km": 12852.199999999873, "lt": 13737.89}, {"l": "22/10", "v": 0.9923480093216902, "km": 12225.400000000147, "lt": 12319.67}], "total": 1.001350531332668, "fonte": "hodometro"}, "rpm": [{"l": "0", "v": 0.5220400066643452}, {"l": "1 - 1.000", "v": 0.1471520727090099}, {"l": "1.001 - 1.500", "v": 0.2541721644936679}, {"l": "1.501 - 1.800", "v": 0.058494087367475314}, {"l": "1.801 - 2.000", "v": 0.013339840477169683}, {"l": "2.000 - 2.500", "v": 0.004801828288331841}], "exc_faixa": [{"l": "Abaixo de 50 km/h", "v": 0}, {"l": "50 a 59 km/h", "v": 325}, {"l": "60 a 69 km/h", "v": 24}, {"l": "70 a 79 km/h", "v": 181}, {"l": "80 a 89 km/h", "v": 3}], "exc_top": [{"l": "60519", "v": 46}, {"l": "60528", "v": 43}, {"l": "60556", "v": 40}, {"l": "60529", "v": 34}, {"l": "60553", "v": 33}, {"l": "60551", "v": 32}, {"l": "60554", "v": 28}, {"l": "60536", "v": 24}, {"l": "60550", "v": 21}, {"l": "60521", "v": 21}], "exc_turno": [{"l": "A", "v": 175}, {"l": "B", "v": 83}, {"l": "C", "v": 275}], "meta_oc": 0.1, "notas": ["Frotas retiradas do relatório: 46112, 46113, 60510, 60511, 60514, 60546.", "Frotas sem hodômetro no abastecimento (terceiros): litros e km do relatório de consumo (12/10 a 23/10); km/dia = km ÷ 12.", "Litros, km e km/L das frotas com hodômetro (605xx): abastecimento de 12/10 a 22/10. Km = diferença de hodômetro entre abastecimentos; km/L = km ÷ litros abastecidos no fim de cada trecho; km/dia = km ÷ 11.", "Abastecimento: ignoradas as frotas que não constam no relatório de consumo: 60501, 60502, 60503, 60504, 60507, 60508, 60512, 60516, 60521, 60524, 60530, 60543.", "Monit: fora da análise por não serem canavieiros: 60541.", "O monit trouxe 29 caminhões; sem telemetria (fora de ocioso e RPM): 60500, 60505, 60506, 60519, 60528, 60537, 60538, 60539, 60540, 60553, 60554, 60555, 60556, 60557.", "Excessos de velocidade: o arquivo do rastreador cobre 22/10 a 23/10 (533 alertas).", "O abastecimento vai só até 22/10; balança e monit vão até 23/10: os dias seguintes ficam sem litros e km/L.", "Consumo diário: litros de cada abastecimento do relatório analítico (12/10 a 22/10), só das frotas da tabela; total 129.930 L.", "Evolução do km/L: hodômetro do abastecimento; cada trecho entre dois abastecimentos conta no dia do abastecimento que fecha o trecho."], "obs": {"monit_frotas": 29, "frotas_sem_monit": [60500, 60505, 60506, 60519, 60528, 60537, 60538, 60539, 60540, 60553, 60554, 60555, 60556, 60557]}};
+const NF=d=>new Intl.NumberFormat('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d}).format;
+const f0=NF(0),f1=NF(1),f2=NF(2),brl=v=>'R$ '+f2(v),pc=(v,d=2)=>NF(d)(v*100)+'%';
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;parent&&parent.appendChild(e);return e}
+function svg(box,w,h){box.replaceChildren();return el('svg',{viewBox:`0 0 ${w} ${h}`},box)}
+function tip(box){let t=box.querySelector('.tip');if(!t){t=document.createElement('div');t.className='tip';t.hidden=true;box.appendChild(t)}
+ return (ev,txt)=>{if(!ev){t.hidden=true;return}t.textContent=txt;t.hidden=false;const r=box.getBoundingClientRect();let x=ev.clientX-r.left+10;if(x+t.offsetWidth>r.width)x=r.width-t.offsetWidth;t.style.left=x+'px';t.style.top=(ev.clientY-r.top-30)+'px'}}
+function hover(node,box,txt){const T=tip(box);node.addEventListener('mousemove',e=>T(e,txt));node.addEventListener('mouseleave',()=>T())}
+
+/* ícones */
+const IC={
+ bomba:'<rect x="5" y="5" width="13" height="21" rx="2" fill="#d64550"/><rect x="8" y="8" width="7" height="5" fill="#fff"/><path d="M18 10h3l2 3v9a2 2 0 0 1-4 0v-5h-1" fill="none" stroke="#d64550" stroke-width="2"/><rect x="3" y="25" width="17" height="3" fill="#8a1f28"/>',
+ saco:'<path d="M11 6h8l-2 4h-4z" fill="#b8860b"/><path d="M8 13c0-3 4-4 7-4s7 1 7 4c3 4 4 8 2 11-1 2-4 3-9 3s-8-1-9-3c-2-3-1-7 2-11z" fill="#e0a526"/><text x="15" y="23" font-size="9" text-anchor="middle" fill="#fff" font-weight="700">$</text>',
+ caminhao:'<rect x="2" y="9" width="17" height="11" rx="1" fill="#e8eaee" stroke="#555" stroke-width="1.2"/><path d="M19 12h5l4 4v4h-9z" fill="#2e7d32"/><circle cx="7" cy="22" r="3" fill="#333"/><circle cx="23" cy="22" r="3" fill="#333"/>',
+ estrada:'<rect x="1" y="3" width="28" height="24" rx="3" fill="#2e8b57"/><path d="M11 27l3-24h2l3 24z" fill="#555"/><path d="M15 6v4M15 13v4M15 20v4" stroke="#fff" stroke-width="1.2"/><rect x="1" y="3" width="28" height="9" rx="3" fill="#4aa3df" opacity=".6"/>',
+ grafico:'<rect x="2" y="3" width="26" height="24" rx="2" fill="#e6efff" stroke="#9db6e8"/><path d="M5 22l6-6 5 4 9-11" fill="none" stroke="#3a6fd8" stroke-width="2.2" stroke-linecap="round"/>',
+ alvo:'<circle cx="14" cy="16" r="11" fill="#d64550"/><circle cx="14" cy="16" r="7.5" fill="#fff"/><circle cx="14" cy="16" r="4" fill="#d64550"/><path d="M14 16L27 4" stroke="#22378c" stroke-width="2"/><path d="M24 3l4 0-1 4" fill="#22378c"/>',
+ dolar:'<text x="15" y="25" font-size="26" text-anchor="middle" fill="#2e9e4f" font-weight="800">$</text>',
+ raio:'<path d="M17 2L6 17h7l-3 12 13-17h-8z" fill="#f08a24"/>',
+ dinheiro:'<g transform="rotate(-25 15 15)"><rect x="3" y="9" width="22" height="13" rx="2" fill="#3aa35a"/><circle cx="14" cy="15.5" r="3.5" fill="#bfe8c9"/></g><circle cx="22" cy="22" r="5" fill="#f2c230"/>'
+};
+const K=D.K;
+const kpis=[['bomba',f2(K.litros),'Litros Abast',''],['caminhao',f0(K.frotas),'Frotas',''],['estrada',f2(K.km),'Km Rodados',''],
+ ['grafico',f2(K.kml),'Média km/L','gray'],['alvo',f2(K.meta),'Meta km/L','green'],['raio',f0(K.excessos),'Excessos Vel.','red']];
+document.getElementById('kpis').innerHTML=kpis.map(([i,v,l,c])=>`<div class="kpi"><svg viewBox="0 0 30 30" aria-hidden="true">${IC[i]}</svg><div><span class="v ${c}">${v}</span><span class="l">${l}</span></div></div>`).join('');
+document.getElementById('periodo').textContent='PERÍODO '+D.periodo;
+
+/* tabela */
+const kc=v=>v==null?'':(v>=K.meta?'kgn':(v>=1.05?'kg':(v>=0.6?'ky':'kr')));
+const tb=document.getElementById('tab');
+D.tabela.forEach(g=>{const r=tb.insertRow();r.className='g';const c=r.insertCell();c.colSpan=7;c.textContent=g.grupo;
+ g.linhas.forEach(x=>{const tr=tb.insertRow();const z=v=>v==null||v===0;
+  [[String(x.frota),''],[z(x.litros)?'':f0(x.litros),'i'],[x.obs?'n/c':(z(x.km)?'-':f0(x.km)),x.obs?'kr':''],[x.obs?'n/c':(z(x.km_dia)?'-':f0(x.km_dia)),x.obs?'kr':'i'],
+   [x.ton==null?'':f2(x.ton),'ton'],[x.kml==null?'':f2(x.kml),'i '+kc(x.kml)],[x.viagens==null?'':f0(x.viagens),'i']]
+  .forEach(([t,cl])=>{const td=tr.insertCell();td.textContent=t;if(cl)td.className=cl})})});
+
+/* barras verticais com rótulo em cima (estilo Power BI) */
+function vbars(id,rows,opt){const box=document.getElementById(id);const W=opt.w||560,H=opt.h||150,top=26,bot=opt.bot||40;
+ const s=svg(box,W,H);const max=Math.max(...rows.map(r=>r.v),1);const n=rows.length;const slot=W/n;const bw=Math.min(opt.bw||60,slot*.55);
+ rows.forEach((r,i)=>{const cx=slot*i+slot/2;const h=Math.max(r.v>0?2:1,(H-top-bot)*r.v/max*(opt.scale||1));const y=H-bot-h;
+  const rc=el('rect',{x:cx-bw/2,y,width:bw,height:h,fill:opt.color?opt.color(r,i):'#22378c'},s);hover(rc,box,`${r.l}: ${opt.fmt(r.v)}`);
+  el('text',{x:cx,y:(opt.line?Math.min(y,H-bot-(H-top-bot)*opt.line/max):y)-7,'text-anchor':'middle','font-size':13,'font-weight':700},s,opt.fmt(r.v));
+  String(r.l).split('\n').forEach((ln,k)=>el('text',{x:cx,y:H-bot+16+k*14,'text-anchor':'middle','font-size':12},s,ln));});
+ if(opt.line){const yv=H-bot-(H-top-bot)*opt.line/max;el('line',{x1:slot*.3,x2:W-slot*.3,y1:yv,y2:yv,stroke:'#22378c','stroke-width':3},s)}}
+
+/* barras horizontais com valor à direita */
+function hbars(id,rows,opt){const box=document.getElementById(id);const W=opt.w||300,rh=opt.rh||23,lw=opt.lw||56,H=rows.length*rh+6;
+ const s=svg(box,W,H);const max=Math.max(...rows.map(r=>r.v),1e-9);const bwMax=W-lw-opt.vw;
+ rows.forEach((r,i)=>{const y=i*rh+3;const w=Math.max(2,bwMax*r.v/max);
+  el('text',{x:lw-8,y:y+rh/2+4,'text-anchor':'end','font-size':opt.fs||12},s,r.l);
+  const rc=el('rect',{x:lw,y:y+4,width:w,height:rh-9,fill:opt.color?opt.color(r,i):'#22378c'},s);hover(rc,box,`${r.l}: ${opt.fmt(r.v)}`);
+  el('text',{x:lw+w+6,y:y+rh/2+4,'font-size':opt.fs||12,'font-weight':opt.bold?700:400},s,opt.fmt(r.v));});}
+
+/* linha com meta */
+function linha(id,rows,meta,opt){const box=document.getElementById(id);const W=opt.w||560,H=opt.h||120,l=30,r=40,top=24,bot=26;
+ const s=svg(box,W,H);const n=rows.length;const xs=i=>n===1?(l+W-r)/2:l+(W-l-r)*i/(n-1);
+ const vals=rows.map(d=>d.v).concat([meta]);const lo=Math.min(...vals)*opt.lo,hi=Math.max(...vals)*opt.hi;const ys=v=>H-bot-(H-top-bot)*(v-lo)/(hi-lo);
+ if(opt.area&&n>1){el('path',{d:`M${xs(0)},${H-bot} `+rows.map((d,i)=>`L${xs(i)},${ys(d.v)}`).join(' ')+` L${xs(n-1)},${H-bot}Z`,fill:'#22378c',opacity:.35},s)}
+ if(opt.area&&n===1){el('rect',{x:xs(0)-30,y:ys(rows[0].v),width:60,height:H-bot-ys(rows[0].v),fill:'#22378c',opacity:.25},s)}
+ el('line',{x1:l,x2:W-r,y1:ys(meta),y2:ys(meta),stroke:'#2e7d32','stroke-width':3},s);
+ el('text',{x:W-r+4,y:ys(meta)-4,'font-size':12,'font-weight':700,fill:'#2e7d32'},s,opt.fmt(meta));
+ if(n>1)el('path',{d:rows.map((d,i)=>`${i?'L':'M'}${xs(i)},${ys(d.v)}`).join(' '),fill:'none',stroke:'#22378c','stroke-width':2.5,'stroke-dasharray':opt.area?'7 4':''},s);
+ rows.forEach((d,i)=>{const c=el('circle',{cx:xs(i),cy:ys(d.v),r:5,fill:'#22378c'},s);hover(c,box,`${d.l}: ${opt.fmt(d.v)}`);
+  el('circle',{cx:xs(i),cy:ys(meta),r:4,fill:'#2e7d32'},s);
+  el('text',{x:xs(i),y:opt.below?ys(d.v)+20:ys(d.v)-9,'text-anchor':'middle','font-size':13,'font-weight':700},s,opt.fmt(d.v));
+  el('text',{x:xs(i),y:H-4,'text-anchor':'middle','font-size':12},s,n>8?d.l.slice(0,2):d.l);});}
+
+/* rosca de turnos */
+function rosca(id,rows){const box=document.getElementById(id);const W=240,H=190,cx=W/2,cy=H/2,R=70,ri=46;const s=svg(box,W,H);
+ const tot=rows.reduce((a,r)=>a+r.v,0)||1;const cor={A:'#d64550',B:'#d9b51f',C:'#6b6b6b'};let a0=-Math.PI/2+.0001;
+ rows.forEach(r=>{const a1=a0+2*Math.PI*r.v/tot;const big=a1-a0>Math.PI?1:0;const P=(rr,a)=>[cx+rr*Math.cos(a),cy+rr*Math.sin(a)];
+  const [x0,y0]=P(R,a0),[x1,y1]=P(R,a1),[x2,y2]=P(ri,a1),[x3,y3]=P(ri,a0);
+  const p=el('path',{d:`M${x0},${y0}A${R},${R} 0 ${big} 1 ${x1},${y1}L${x2},${y2}A${ri},${ri} 0 ${big} 0 ${x3},${y3}Z`,fill:cor[r.l],stroke:'#fff','stroke-width':2},s);
+  hover(p,box,`Turno ${r.l}: ${f0(r.v)} alertas`);
+  const am=(a0+a1)/2;const [lx,ly]=P(R+20,am);el('text',{x:lx,y:ly+4,'text-anchor':Math.cos(am)>0.2?'start':(Math.cos(am)<-0.2?'end':'middle'),'font-size':12,'font-weight':700},s,NF(0)(r.v/tot*100)+'%');a0=a1;});}
+
+/* motor ocioso */
+vbars('c-ocfx',D.oc_faixa.map(r=>({l:r.l.replace('Acima de 50%','Acima de\n50%'),v:r.v})),{w:600,h:150,fmt:f0,bw:40,bot:44});
+hbars('c-octop',D.oc_top,{w:230,vw:46,fmt:f1,lw:52});
+const to=document.getElementById('t-oc');D.oc_tab.forEach(r=>{const tr=to.insertRow();[String(r.frota),r.data,f2(r.lig),f2(r.oc),pc(r.pct)].forEach(t=>{tr.insertCell().textContent=t})});
+linha('c-ocdia',D.oc_dia,D.meta_oc,{w:380,h:120,fmt:v=>NF(0)(v*100)+'%',lo:0,hi:1.25,area:true});
+
+/* km/L e litros */
+/* km/L diário + total (estimativa: litros do abastecimento; km por GPS ou viagens x km da frente) */
+(function(){const box=document.getElementById('c-kml');const rows=D.kml_est?D.kml_est.dias:D.kml_dia;const tot=D.kml_est?D.kml_est.total:K.kml;
+ const W=600,H=130,l=24,r=44,top=26,bot=26,n=rows.length+1,slot=(W-l-r)/n,s=svg(box,W,H);
+ const vals=rows.map(d=>d.v).concat([tot,K.meta]);const lo=Math.min(...vals)*.85,hi=Math.max(...vals)*1.06;const ys=v=>H-bot-(H-top-bot)*(v-lo)/(hi-lo);const xs=i=>l+slot*i+slot/2;
+ el('line',{x1:l,x2:W-r,y1:ys(K.meta),y2:ys(K.meta),stroke:'#2e7d32','stroke-width':3},s);
+ el('text',{x:W-r+4,y:ys(K.meta)+4,'font-size':12,'font-weight':700,fill:'#2e7d32'},s,f2(K.meta));
+ el('line',{x1:xs(n-1)-slot/2,x2:xs(n-1)-slot/2,y1:top-8,y2:H-bot,stroke:'#d9dde6','stroke-dasharray':'3 3'},s);
+ el('path',{d:rows.map((d,i)=>`${i?'L':'M'}${xs(i)},${ys(d.v)}`).join(' '),fill:'none',stroke:'#22378c','stroke-width':2.5},s);
+ rows.forEach((d,i)=>{const c=el('circle',{cx:xs(i),cy:ys(d.v),r:5,fill:'#22378c'},s);hover(c,box,d.km!=null?`${d.l}: ${f2(d.v)} km/L (${f0(d.km)} km / ${f0(d.lt)} L)`:`${d.l}: ${f2(d.v)}`);
+  el('text',{x:xs(i),y:ys(d.v)-10,'text-anchor':'middle','font-size':12,'font-weight':700},s,f2(d.v));
+  el('text',{x:xs(i),y:H-6,'text-anchor':'middle','font-size':11.5},s,d.l);});
+ const xt=xs(n-1);const c=el('rect',{x:xt-7,y:ys(tot)-7,width:14,height:14,fill:'#111b4d'},s);hover(c,box,`Total do período: ${f2(tot)} km/L`);
+ el('text',{x:xt,y:ys(tot)-12,'text-anchor':'middle','font-size':13,'font-weight':800},s,f2(tot));
+ el('text',{x:xt,y:H-6,'text-anchor':'middle','font-size':11.5,'font-weight':700},s,'Total');})();
+/* consumo diário: barras por dia (estilo do motor ocioso) + barra final com a soma */
+(function(){const rows=D.litros_dia,box=document.getElementById('c-lit');const tot=rows.reduce((a,r)=>a+r.v,0);
+ document.getElementById('lit-media').textContent='Média/dia '+f0(tot/Math.max(rows.length,1));
+ const all=rows.concat([{l:'Total',v:tot,t:1}]);const W=600,H=175,top=24,bot=26,n=all.length,slot=W/n,bw=Math.min(34,slot*.62);
+ const s=svg(box,W,H);const mx=Math.max(...rows.map(r=>r.v),1);const hh=H-top-bot;
+ all.forEach((r,i)=>{const cx=slot*i+slot/2;const h=r.t?hh:Math.max(2,hh*.82*r.v/mx);const y=H-bot-h;
+  const rc=el('rect',{x:cx-bw/2,y,width:bw,height:h,fill:r.t?'#111b4d':'#22378c'},s);hover(rc,box,`${r.l}: ${f0(r.v)} L`);
+  if(r.t){const yb=y+h*.42;el('path',{d:`M${cx-bw/2-3},${yb+4}L${cx+bw/2+3},${yb-4}M${cx-bw/2-3},${yb+10}L${cx+bw/2+3},${yb+2}`,stroke:'#fff','stroke-width':3},s)}
+  el('text',{x:cx,y:y-7,'text-anchor':'middle','font-size':11.5,'font-weight':700},s,f0(r.v));
+  el('text',{x:cx,y:H-bot+16,'text-anchor':'middle','font-size':11.5,'font-weight':r.t?700:400},s,r.l);});})();
+
+/* RPM */
+hbars('c-rpm',D.rpm,{w:400,vw:62,lw:104,rh:29,fmt:v=>pc(v),bold:true,color:r=>r.l==='1.801 - 2.000'?'#e8c95a':(r.l==='2.000 - 2.500'?'#d64550':'#22378c')});
+
+/* excessos */
+vbars('c-exfx',D.exc_faixa.map(r=>{const p=r.l.replace(' km/h','').split(' a ');return {l:r.l.startsWith('Abaixo')?'Abaixo de\n50 km/h':(p.length>1?p[0]+' a '+p[1]+'\nkm/h':'90 ou mais\nkm/h'),v:r.v}}),{w:400,h:170,fmt:f0,bw:34,bot:40,color:r=>r.l.startsWith('80')?'#e8c95a':(r.l.startsWith('90')?'#d64550':'#22378c')});
+hbars('c-extop',D.exc_top,{w:200,vw:34,lw:50,fmt:f0,bold:true});
+rosca('c-turno',D.exc_turno);
+(D.notas||[]).forEach(t=>{const li=document.createElement('li');li.textContent=t;document.getElementById('notas').appendChild(li)});
+</script>
+
+
+</body>
+</html>
