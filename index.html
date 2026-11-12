@@ -74,13 +74,35 @@ table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
 .tip{position:absolute;pointer-events:none;background:#fff;border:1px solid var(--line);border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.12);padding:4px 8px;font-size:12px;white-space:nowrap;z-index:5}
 @media (max-width:1250px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.grid .col:last-child{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}}
 @media (max-width:820px){.top{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid,.grid .col:last-child{grid-template-columns:minmax(0,1fr);display:grid}.split{grid-template-columns:minmax(0,1fr)}}
+.btn-pdf{background:var(--navy);color:#fff;border:0;border-radius:4px;font:600 12px var(--font);padding:4px 14px;cursor:pointer;white-space:nowrap}
+.btn-pdf:hover{background:#2a44a8}
+.hdr-acoes{display:flex;gap:8px;align-items:center}
+/* PDF / impressão: A3 paisagem, cores preservadas, mesmo layout da tela, sem botão nem janela de detalhe */
+@page{size:A3 landscape;margin:8mm}
+@media print{
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  html,body{background:var(--bg)}
+  .pg{max-width:none;padding:0;gap:8px}
+  .btn-pdf,.tip,.dlg{display:none!important}
+  .kpis{grid-template-columns:repeat(7,minmax(0,1fr))}
+  .grid{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr) minmax(0,.82fr)}
+  .grid .col:last-child{display:flex;grid-column:auto}
+  .split{grid-template-columns:minmax(0,.55fr) minmax(0,1fr)}
+  .tw,.to-wrap{max-height:none;overflow:visible}
+  .tv th{position:static}
+  .card,.foot,.kpi{box-shadow:none;break-inside:avoid}
+  .col:first-child .card{break-inside:auto}
+  .tv tr{break-inside:avoid}
+  .foot{font-size:10px;padding:6px 10px}
+  .assinatura-jv{padding:2px 0 0!important;break-before:avoid}
+}
 </style>
 
 <div class="pg">
   <div class="top">
     <div class="logo"><img class="logo-img" src="logo-crv.png" alt="CRV Industrial — Açúcar, Etanol e Energia"></div>
     <div class="hdr">
-      <div class="hdr-row"><h1>Acompanhamento consumo de combustível - caminhões</h1><span class="periodo" id="periodo"></span></div>
+      <div class="hdr-row"><h1>Acompanhamento consumo de combustível - caminhões</h1><span class="hdr-acoes"><button type="button" class="btn-pdf" id="btn-pdf" title="Salvar o relatório em PDF (A3 paisagem)">Gerar PDF</button><span class="periodo" id="periodo"></span></span></div>
       <div class="kpis" id="kpis"></div>
     </div>
   </div>
@@ -315,6 +337,9 @@ hbars('c-motivo',D.motivo.map(r=>({l:r.l.replace('Abastecimento De Combustivel -
 rosca('c-turno',D.oc_turno);
 
 (D.notas||[]).forEach(t=>{const li=document.createElement('li');li.textContent=t;document.getElementById('notas').appendChild(li)});
+/* Gerar PDF: abre a impressão do navegador já em A3 paisagem; escolher "Salvar como PDF" */
+document.getElementById('btn-pdf').addEventListener('click',()=>{const t0=document.title;document.title='Consumo Caminhoes CRV - '+D.periodo.replace(/\//g,'-');
+ try{window.print()}catch(e){alert('Não foi possível abrir a impressão aqui. Abra o relatório em uma aba própria e tente de novo.')}finally{setTimeout(()=>{document.title=t0},1000)}});
 </script>
 
 

@@ -8,6 +8,8 @@ Painel semanal: km/L (meta do indicador), L/t, raio, motor ocioso, paradas longa
 - `antigo.html`: versão anterior do relatório (com excessos de velocidade e evolução diária).
 - `litros.html`: evolução de litros por frota.
 
+**PDF:** botão **Gerar PDF** no topo do relatório (ao lado do período) abre a impressão já em A3 paisagem; escolha "Salvar como PDF". Sai em 2 páginas, com as mesmas cores da tela.
+
 ## Bases
 - **Indicador Consumo de Combustível — Caminhões Canavieiros (PDF)**: coluna SEMANA (km, diesel, km/L, toneladas, L/t, raio), agrupado por modelo.
 - **Monit**: telemetria (estado, motor ligado, RPM, operação, motorista).
