@@ -77,11 +77,12 @@ table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
 .btn-pdf{background:var(--navy);color:#fff;border:0;border-radius:4px;font:600 12px var(--font);padding:4px 14px;cursor:pointer;white-space:nowrap}
 .btn-pdf:hover{background:#2a44a8}
 .hdr-acoes{display:flex;gap:8px;align-items:center}
-/* PDF / impressão: A3 paisagem, cores preservadas, mesmo layout da tela, sem botão nem janela de detalhe */
-@page{size:A3 landscape;margin:8mm}
+/* PDF / impressão: A4 paisagem (zoom para manter o layout da tela), cores preservadas, mesmo layout da tela, sem botão nem janela de detalhe */
+@page{size:A4 landscape;margin:6mm}
 @media print{
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   html,body{background:var(--bg)}
+  body{zoom:.71}
   .pg{max-width:none;padding:0;gap:8px}
   .btn-pdf,.tip,.dlg{display:none!important}
   .kpis{grid-template-columns:repeat(7,minmax(0,1fr))}
@@ -102,7 +103,7 @@ table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
   <div class="top">
     <div class="logo"><img class="logo-img" src="logo-crv.png" alt="CRV Industrial — Açúcar, Etanol e Energia"></div>
     <div class="hdr">
-      <div class="hdr-row"><h1>Acompanhamento consumo de combustível - caminhões</h1><span class="hdr-acoes"><button type="button" class="btn-pdf" id="btn-pdf" title="Salvar o relatório em PDF (A3 paisagem)">Gerar PDF</button><span class="periodo" id="periodo"></span></span></div>
+      <div class="hdr-row"><h1>Acompanhamento consumo de combustível - caminhões</h1><span class="hdr-acoes"><button type="button" class="btn-pdf" id="btn-pdf" title="Salvar o relatório em PDF (A4 paisagem)">Gerar PDF</button><span class="periodo" id="periodo"></span></span></div>
       <div class="kpis" id="kpis"></div>
     </div>
   </div>
