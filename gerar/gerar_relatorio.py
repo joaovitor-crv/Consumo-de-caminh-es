@@ -242,7 +242,9 @@ def main():
             + (f", atualizado em {atualizado}" if atualizado else "") + ".",
             f"Motor ocioso, paradas, RPM, motivos, turnos e motoristas: monit de {ini[:5]} a {fim}."
             + (f" Sem telemetria nesse período: {', '.join(sem)} ({'aparece' if len(sem) == 1 else 'aparecem'} na tabela só com os dados de consumo)." if sem else ""),
-            *([f"Atenção (do indicador): {info['aviso_frotas'] or 'algumas frotas'} têm o abastecimento lançado à mão, integrado só até {info['aviso_ate']}; o diesel da semana depois dessa data pode estar incompleto."] if info.get("aviso_ate") else []),
+            *([f"Atenção (do indicador): o abastecimento é lançado à mão e está integrado só até {info['aviso_ate']}; o diesel da semana depois dessa data pode estar incompleto."
+               + (f" {info['aviso_frotas']} vieram de outra empresa (diesel e pesagem contam desde que passaram a pesar na empresa 8)." if info.get('aviso_frotas') else "")]
+              if info.get("aviso_ate") else []),
             *([f"Sem km no indicador e sem monit na semana (fora da tabela): {', '.join(parados)}."] if parados else []),
             *([f"No monit, mas fora do indicador (não entram): {', '.join(fora_cam)}."] if fora_cam else []),
             f"Motor ocioso descontando 90 s de cada parada: {br(t['paradas'], 0)} paradas com motor ligado; "
