@@ -196,11 +196,29 @@ def calcular(rows, fim_dt):
                  oc_bruto=tot["oc_bruto"] / 3600, paradas=tot["paradas"], paradas_90=tot["paradas_90"]))
 
 
+def dados_da_pagina(pagina):
+    """Lê o objeto D de uma página já gerada (None se não houver)."""
+    if not pagina or not os.path.exists(pagina):
+        return None
+    m = re.search(r"const D=(\{.*?\});\n", open(pagina, encoding="utf-8").read())
+    return json.loads(m.group(1)) if m else None
+
+
+def anterior_de(P):
+    """km/L da semana anterior (por caminhão e por modelo), a partir dos dados da página dela, para a coluna "vs"."""
+    ini, fim = [x.strip() for x in P["periodo"].split(" - ")]
+    return dict(periodo=f"{ini[:5]} a {fim[:5]}",
+                frota={str(x["frota"]): x.get("kml") for g in P["tabela"] for x in g["linhas"]},
+                modelo={g["grupo"]: (g.get("tot") or {}).get("kml") for g in P["tabela"]})
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--pdf", required=True)
     ap.add_argument("--monit", required=True, nargs="+")
     ap.add_argument("--saida", default=os.path.join(AQUI, "..", "index.html"))
+    ap.add_argument("--anterior", help="página da semana anterior para a coluna \"vs\" de km/L "
+                                       "(padrão: o index.html atual, se for de outra semana)")
     a = ap.parse_args()
 
     ini, fim, atualizado, grupos, info = ler_pdf(a.pdf)
@@ -229,8 +247,16 @@ def main():
         fr.append(dict(l=g, **T))
     TK = sum(x["km"] for x in fr); TL = sum(x["litros"] for x in fr); TT = sum(x["ton"] for x in fr)
     t = M["tot"]
+    # semana anterior: --anterior, ou o index.html atual antes de ser substituído; se ele já for desta mesma
+    # semana (gerada de novo), mantém a comparação que ele já tinha
+    if a.anterior:
+        P = dados_da_pagina(a.anterior)
+        ant = anterior_de(P) if P else None
+    else:
+        P = dados_da_pagina(a.saida)
+        ant = None if not P else (P.get("ant") if P["periodo"] == f"{ini} - {fim}" else anterior_de(P))
     D = dict(
-        periodo=f"{ini} - {fim}",
+        periodo=f"{ini} - {fim}", ant=ant,
         K=dict(litros=TL, km=TK, frotas=sum(1 for g in tab for x in g["linhas"] if x["km"] or x["pct"] is not None), ton=TT,
                lt=TL / TT if TT else 0, meta=META_LT, kml=TK / TL if TL else 0, meta_kml=fr[0]["meta"] if fr else 0,
                horas_oc=t["oc"], horas_oc_bruto=t["oc_bruto"],

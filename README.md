@@ -16,6 +16,7 @@ Painel semanal: km/L (meta do indicador), L/t, raio, motor ocioso, paradas longa
 
 ## Regras
 - Meta de km/L do indicador (1,20): verde na meta ou acima.
+- Coluna "vs" no acompanhamento por caminhão: diferença do km/L contra a semana anterior (▲ verde = subiu, ▼ vermelho = caiu).
 - Motor ocioso = PARADA com motor ligado (Sim ou RPM ≥ 700); cada leitura vale até a próxima (máx. 10 min); 90 s descontados de cada parada. Meta 10%.
 - RPM: até 900 (lenta), 901–1.400, 1.401–1.750, 1.751–2.000, acima de 2.000 (excesso).
 - Rankings de excesso de RPM (caminhões e motoristas): pelo menos 20 h de motor ligado. Ranking de ocioso por motorista: pelo menos 5 h.
@@ -24,7 +25,7 @@ Painel semanal: km/L (meta do indicador), L/t, raio, motor ocioso, paradas longa
 
 ## Como gerar
 ```
-python gerar/gerar_relatorio.py --pdf INDICADOR_CAMINHOES.pdf --monit MONIT.csv [MONIT2.csv ...]
+python gerar/gerar_relatorio.py --pdf INDICADOR_CAMINHOES.pdf --monit MONIT.csv [MONIT2.csv ...] [--anterior SEMANA_ANTERIOR.html]
 ```
 Precisa de Python 3 e `pdftotext` (poppler-utils). Visual em `gerar/modelo.html` (dados em `__DADOS__`).
 

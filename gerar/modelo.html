@@ -44,6 +44,8 @@ table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
 .tv td.ton{background:var(--ton)}
 .tv tr.t td{font-weight:700;border-top:1px solid #8a93a6}
 .tv tr.g td{font-weight:700;text-align:left;padding:8px 6px 2px;border-right:none}
+.tv.cmpx td,.tv.cmpx th{padding-left:4px;padding-right:4px}.tv.cmpx td:first-child{padding-left:12px}
+.tv td.dv{font-size:10.5px;font-weight:700;padding:2px 3px}.tv th#th-ant{font-size:10.5px;padding:8px 2px;line-height:1.15}.tv td.dv.bom{color:var(--green)}.tv td.dv.ruim{color:var(--red)}
 .tv td.lh{font-weight:700} .tv td.meta{color:var(--green)} .tv td.kg{color:var(--muted)} .tv td.ky{color:var(--yellow)} .tv td.kr{color:var(--red)} .tv td.kgn{color:var(--green)}
 .chart{width:100%;position:relative}
 .chart svg{display:block;width:100%;height:auto;overflow:visible}
@@ -111,7 +113,7 @@ table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
   <div class="grid">
     <div class="col">
       <section class="card"><h2>Acompanhamento por caminhão</h2>
-        <div class="tw"><table class="tv"><thead><tr><th>Frotas</th><th>KM</th><th>Litros</th><th>km/L</th><th>Toneladas</th><th>L/t</th><th>Raio</th><th>% Ocioso</th><th>Paradas</th></tr></thead><tbody id="tab"></tbody></table></div>
+        <div class="tw"><table class="tv"><thead><tr><th>Frotas</th><th>KM</th><th>Litros</th><th>km/L</th><th id="th-ant" hidden>vs sem. ant.</th><th>Toneladas</th><th>L/t</th><th>Raio</th><th>% Ocioso</th><th>Paradas</th></tr></thead><tbody id="tab"></tbody></table></div>
       </section>
       <section class="card"><h2>Motor ocioso por motivo (horas)</h2>
         <div class="cb">
@@ -177,6 +179,7 @@ table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
       <li>Agrupado por modelo, como no indicador. km/L do modelo = km ÷ litros; L/t = litros ÷ toneladas; raio = distância média das viagens (km, ponderada pelas toneladas).</li>
       <li>Motor ocioso = estado PARADA com motor ligado (monit). Cada parada é uma sequência contínua de leituras paradas com motor ligado; de cada parada são descontados 90 segundos (paradas de até 90 s não contam) Paradas = total de paradas com motor ligado no período. % ocioso = horas ociosas ÷ horas de motor ligado; meta 10%.</li>
       <li>Meta de km/L do indicador (1,20, no topo do relatório): verde na meta ou acima, vermelho abaixo. Motor ocioso e % ocioso são calculados pelo monit.</li>
+      <li>Coluna "vs" do acompanhamento por caminhão: diferença do km/L contra a semana anterior (km/L desta semana − km/L da anterior). ▲ verde = rendeu mais; ▼ vermelho = rendeu menos; "=" sem mudança; vazio = caminhão sem km/L em uma das semanas.</li>
       <li>Turnos: A 07–15h, B 15–23h, C 23–07h.</li>
       <li>Faixa de RPM = % do tempo de motor ligado em cada faixa de rotação (monit). Faixas: até 900 (lenta), 901–1.400, 1.401–1.750, 1.751–2.000 e acima de 2.000 (excesso).</li>
       <li>Paradas longas: paradas com motor ligado que duraram mais de 10 min e mais de 30 min; "Horas" soma a duração total dessas paradas acima de 10 min.</li>
@@ -226,13 +229,17 @@ document.getElementById('periodo').textContent='PERÍODO '+D.periodo;
 /* tabela */
 const kc=v=>v==null?'':(v<=K.meta?'kgn':(v<=1.15?'kg':(v<=1.5?'ky':'kr')));
 const tb=document.getElementById('tab');
-D.tabela.forEach(g=>{const r=tb.insertRow();r.className='g';const c=r.insertCell();c.colSpan=9;c.textContent=g.grupo;
+/* variação de km/L contra a semana anterior: subir é bom (verde), cair é ruim (vermelho) */
+const A=D.ant;
+const dvk=(a,b)=>{if(a==null||b==null)return ['','dv'];const d=b-a;if(Math.abs(d)<.005)return ['=','dv'];return [(d<0?'▼':'▲')+f2(Math.abs(d)),'dv '+(d>0?'bom':'ruim')]};
+if(A){tb.closest('table').classList.add('cmpx');const th=document.getElementById('th-ant');th.hidden=false;th.innerHTML='vs<br>'+A.periodo.replace(' a ','–');th.title='Variação do km/L contra a semana '+A.periodo}
+D.tabela.forEach(g=>{const r=tb.insertRow();r.className='g';const c=r.insertCell();c.colSpan=A?10:9;c.textContent=g.grupo;
  g.linhas.forEach(x=>{const tr=tb.insertRow();const z=v=>v==null||v===0;
-  [[String(x.frota),''],[z(x.km)?'-':f0(x.km),''],[z(x.litros)?'':f0(x.litros),'i'],[x.kml==null?'':f2(x.kml),'i lh '+(x.kml>=x.meta?'kgn':'kr')],
+  [[String(x.frota),''],[z(x.km)?'-':f0(x.km),''],[z(x.litros)?'':f0(x.litros),'i'],[x.kml==null?'':f2(x.kml),'i lh '+(x.kml>=x.meta?'kgn':'kr')],...(A?[dvk(A.frota[String(x.frota)],x.kml)]:[]),
    [x.ton==null?'':f0(x.ton),'ton'],[x.lt==null?'':f2(x.lt),'i'],[x.raio==null?'':f1(x.raio),''],[x.pct==null?'':pc(x.pct,1),x.pct!=null&&x.pct>D.meta_oc?'kr':''],[x.paradas==null?'':f0(x.paradas),'i']]
   .forEach(([t,cl])=>{const td=tr.insertCell();td.textContent=t;if(cl)td.className=cl})});
  if(g.tot){const T=g.tot,tr=tb.insertRow();tr.className='t';
-  [['Total',''],[f0(T.km),''],[f0(T.litros),''],[T.kml==null?'':f2(T.kml),'lh '+(T.kml>=T.meta?'kgn':'kr')],[f0(T.ton),'ton'],[T.lt==null?'':f2(T.lt),''],[T.raio==null?'':f1(T.raio),''],['',''],['','']]
+  [['Total',''],[f0(T.km),''],[f0(T.litros),''],[T.kml==null?'':f2(T.kml),'lh '+(T.kml>=T.meta?'kgn':'kr')],...(A?[dvk(A.modelo[g.grupo],T.kml)]:[]),[f0(T.ton),'ton'],[T.lt==null?'':f2(T.lt),''],[T.raio==null?'':f1(T.raio),''],['',''],['','']]
   .forEach(([t,cl])=>{const td=tr.insertCell();td.textContent=t;if(cl)td.className=cl})}});
 /* barras verticais com rótulo em cima (estilo Power BI) */
 function vbars(id,rows,opt){const box=document.getElementById(id);const W=opt.w||560,H=opt.h||150,top=26,bot=opt.bot||40;
