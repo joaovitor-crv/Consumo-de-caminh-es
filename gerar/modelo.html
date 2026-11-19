@@ -79,6 +79,8 @@ table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
 .btn-pdf{background:var(--navy);color:#fff;border:0;border-radius:4px;font:600 12px var(--font);padding:4px 14px;cursor:pointer;white-space:nowrap}
 .btn-pdf:hover{background:#2a44a8}
 .hdr-acoes{display:flex;gap:8px;align-items:center}
+.sel-semana{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--navy)}
+.sel-semana select{font:600 12px var(--font);color:var(--ink);border:1px solid var(--navy);border-radius:4px;padding:3px 6px;background:#fff;cursor:pointer}
 /* PDF / impressão: A4 paisagem (zoom para manter o layout da tela), cores preservadas, mesmo layout da tela, sem botão nem janela de detalhe */
 @page{size:A4 landscape;margin:6mm}
 @media print{
@@ -86,7 +88,7 @@ table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
   html,body{background:var(--bg)}
   body{zoom:.71}
   .pg{max-width:none;padding:0;gap:8px}
-  .btn-pdf,.tip,.dlg{display:none!important}
+  .btn-pdf,.tip,.dlg,.sel-semana{display:none!important}
   .kpis{grid-template-columns:repeat(7,minmax(0,1fr))}
   .grid{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr) minmax(0,.82fr)}
   .grid .col:last-child{display:flex;grid-column:auto}
@@ -105,7 +107,7 @@ table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
   <div class="top">
     <div class="logo"><img class="logo-img" src="logo-crv.png" alt="CRV Industrial — Açúcar, Etanol e Energia"></div>
     <div class="hdr">
-      <div class="hdr-row"><h1>Acompanhamento consumo de combustível - caminhões</h1><span class="hdr-acoes"><button type="button" class="btn-pdf" id="btn-pdf" title="Salvar o relatório em PDF (A4 paisagem)">Gerar PDF</button><span class="periodo" id="periodo"></span></span></div>
+      <div class="hdr-row"><h1>Acompanhamento consumo de combustível - caminhões</h1><span class="hdr-acoes"><label class="sel-semana" id="sel-semana-box" hidden>Semana <select id="sel-semana"></select></label><button type="button" class="btn-pdf" id="btn-pdf" title="Salvar o relatório em PDF (A4 paisagem)">Gerar PDF</button><span class="periodo" id="periodo"></span></span></div>
       <div class="kpis" id="kpis"></div>
     </div>
   </div>
@@ -196,6 +198,7 @@ table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
   </div>
 </div>
 
+<script src="semanas.js"></script>
 <script>
 const D=__DADOS__;
 const NF=d=>new Intl.NumberFormat('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d}).format;
@@ -225,6 +228,11 @@ const kpis=[['bomba',f2(K.litros),'Litros Abast',''],['caminhao',f0(K.frotas),'C
  ['relogio',f2(K.kml),'Média km/L',K.kml>=K.meta_kml?'green':'red'],['alvo',f2(K.meta_kml),'Meta km/L','green'],['grafico',f2(K.lt),'Média L/t','gray'],['raio',f1(K.horas_oc)+' h ('+pc(K.pct_oc,1)+')','Motor Ocioso','red']];
 document.getElementById('kpis').innerHTML=kpis.map(([i,v,l,c])=>`<div class="kpi"><svg viewBox="0 0 30 30" aria-hidden="true">${IC[i]}</svg><div><span class="v ${c}">${v}</span><span class="l">${l}</span></div></div>`).join('');
 document.getElementById('periodo').textContent='PERÍODO '+D.periodo;
+/* seletor de semana: cada semana é uma página semana-*.html; a lista vem de semanas.js */
+(()=>{const L=window.SEMANAS||[];if(L.length<2)return;const sel=document.getElementById('sel-semana');
+ sel.innerHTML=L.map((s,i)=>`<option value="${s.arq}">${s.rotulo}${i===0?' (mais recente)':''}</option>`).join('');
+ sel.value=D.semana;if(sel.value!==D.semana)sel.selectedIndex=0;document.getElementById('sel-semana-box').hidden=false;
+ sel.addEventListener('change',()=>{location.href=sel.selectedIndex===0?'index.html':sel.value});})();
 
 /* tabela */
 const kc=v=>v==null?'':(v<=K.meta?'kgn':(v<=1.15?'kg':(v<=1.5?'ky':'kr')));

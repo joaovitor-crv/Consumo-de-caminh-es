@@ -11,6 +11,7 @@ python3 gerar/gerar_relatorio.py --pdf <INDICADOR_CAMINHOES.pdf> --monit <MONIT.
   - top 10 caminhões e top 10 motoristas em excesso de RPM (mín. 20 h); rankings clicáveis mostram os motoristas;
   - quadro "Com abastecimento, sem dados no Solinftec".
   - coluna "vs" no acompanhamento por caminhão (17/11/2026, igual às colhedoras): variação do km/L contra a semana anterior, por caminhão e no total do modelo; ▲ verde = subiu, ▼ vermelho = caiu. A semana anterior vem do `index.html` atual antes de ser substituído (se ele for da mesma semana, mantém a comparação que já tinha) ou de `--anterior <pagina.html>`. Gere as semanas em ordem para a comparação ficar certa.
+- Seletor de semanas (19/11/2026, igual às colhedoras e transbordos): o gerador salva cada semana em `semana-AAAA-MM-DD_AAAA-MM-DD.html`, refaz `semanas.js` e copia a mais recente para `index.html`. A coluna "vs" usa a página da semana que termina na véspera, quando existe.
 - `antigo.html` é a versão anterior (excessos de velocidade); `litros.html` é separado. Não apagar.
 - Assinatura: "Desenvolvido por João Vitor - CRV".
 - Depois de mudar `gerar/modelo.html` ou `gerar/gerar_relatorio.py`, regenere, confira no navegador e faça commit e push.

@@ -5,6 +5,7 @@ Painel semanal: km/L (meta do indicador), L/t, raio, motor ocioso, paradas longa
 **Período atual:** 09/11/2026 a 15/11/2026
 
 - `index.html`: relatório semanal (padrão novo, igual ao de colhedoras e transbordos).
+- `semana-AAAA-MM-DD_AAAA-MM-DD.html`: uma página por semana; o seletor **Semana** no topo troca entre elas (lista em `semanas.js`). `index.html` é sempre a semana mais recente.
 - `antigo.html`: versão anterior do relatório (com excessos de velocidade e evolução diária).
 - `litros.html`: evolução de litros por frota.
 

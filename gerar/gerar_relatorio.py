@@ -16,6 +16,7 @@ import csv
 import json
 import os
 import re
+import shutil
 import subprocess
 from datetime import datetime, timedelta
 
@@ -212,13 +213,38 @@ def anterior_de(P):
                 modelo={g["grupo"]: (g.get("tot") or {}).get("kml") for g in P["tabela"]})
 
 
+def pagina_semana(ini, fim):
+    """Nome do arquivo da semana: semana-AAAA-MM-DD_AAAA-MM-DD.html."""
+    iso = lambda d: datetime.strptime(d, "%d/%m/%Y").strftime("%Y-%m-%d")
+    return f"semana-{iso(ini)}_{iso(fim)}.html"
+
+
+def pagina_da_vespera(pasta, ini):
+    """Página semana-*.html já gerada que termina na véspera de ini (semana anterior), ou None."""
+    alvo = (datetime.strptime(ini, "%d/%m/%Y") - timedelta(days=1)).strftime("%Y-%m-%d") + ".html"
+    arqs = [f for f in os.listdir(pasta) if re.fullmatch(r"semana-\d{4}-\d{2}-\d{2}_\d{4}-\d{2}-\d{2}\.html", f) and f.endswith(alvo)]
+    return os.path.join(pasta, arqs[0]) if arqs else None
+
+
+def atualizar_semanas(pasta):
+    """Refaz semanas.js (lista de semanas para o seletor do topo) a partir das páginas semana-*.html; devolve a mais recente."""
+    arqs = sorted(f for f in os.listdir(pasta) if re.fullmatch(r"semana-\d{4}-\d{2}-\d{2}_\d{4}-\d{2}-\d{2}\.html", f))
+    br_ = lambda iso: f"{iso[8:10]}/{iso[5:7]}/{iso[:4]}"
+    L = [dict(arq=f, ini=f[7:17], fim=f[18:28], rotulo=f"{br_(f[7:17])} a {br_(f[18:28])}") for f in arqs]
+    with open(os.path.join(pasta, "semanas.js"), "w", encoding="utf-8") as fh:
+        fh.write("// Gerado por gerar/gerar_relatorio.py: semanas disponíveis no seletor do topo (mais recente primeiro).\n")
+        fh.write("window.SEMANAS = " + json.dumps(L[::-1], ensure_ascii=False, indent=1) + ";\n")
+    return arqs[-1]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--pdf", required=True)
     ap.add_argument("--monit", required=True, nargs="+")
-    ap.add_argument("--saida", default=os.path.join(AQUI, "..", "index.html"))
+    ap.add_argument("--saida", default=os.path.join(AQUI, "..", "index.html"),
+                    help="página inicial; cada semana também vira semana-AAAA-MM-DD_AAAA-MM-DD.html na mesma pasta")
     ap.add_argument("--anterior", help="página da semana anterior para a coluna \"vs\" de km/L "
-                                       "(padrão: o index.html atual, se for de outra semana)")
+                                       "(padrão: a semana-*.html que termina na véspera; senão o index.html atual, se for de outra semana)")
     a = ap.parse_args()
 
     ini, fim, atualizado, grupos, info = ler_pdf(a.pdf)
@@ -247,16 +273,18 @@ def main():
         fr.append(dict(l=g, **T))
     TK = sum(x["km"] for x in fr); TL = sum(x["litros"] for x in fr); TT = sum(x["ton"] for x in fr)
     t = M["tot"]
-    # semana anterior: --anterior, ou o index.html atual antes de ser substituído; se ele já for desta mesma
-    # semana (gerada de novo), mantém a comparação que ele já tinha
-    if a.anterior:
-        P = dados_da_pagina(a.anterior)
+    # semana anterior: --anterior, ou a semana-*.html que termina na véspera, ou o index.html atual antes de ser
+    # substituído; se ele já for desta mesma semana (gerada de novo), mantém a comparação que ele já tinha
+    pasta = os.path.dirname(os.path.abspath(a.saida))
+    vespera = None if a.anterior else pagina_da_vespera(pasta, ini)
+    if a.anterior or vespera:
+        P = dados_da_pagina(a.anterior or vespera)
         ant = anterior_de(P) if P else None
     else:
         P = dados_da_pagina(a.saida)
         ant = None if not P else (P.get("ant") if P["periodo"] == f"{ini} - {fim}" else anterior_de(P))
     D = dict(
-        periodo=f"{ini} - {fim}", ant=ant,
+        periodo=f"{ini} - {fim}", semana=pagina_semana(ini, fim), ant=ant,
         K=dict(litros=TL, km=TK, frotas=sum(1 for g in tab for x in g["linhas"] if x["km"] or x["pct"] is not None), ton=TT,
                lt=TL / TT if TT else 0, meta=META_LT, kml=TK / TL if TL else 0, meta_kml=fr[0]["meta"] if fr else 0,
                horas_oc=t["oc"], horas_oc_bruto=t["oc_bruto"],
@@ -279,7 +307,10 @@ def main():
         ])
     html = open(os.path.join(AQUI, "modelo.html"), encoding="utf-8").read()
     html = html.replace("__DADOS__", json.dumps(D, ensure_ascii=False))
-    open(a.saida, "w", encoding="utf-8").write(html)
+    open(os.path.join(pasta, D["semana"]), "w", encoding="utf-8").write(html)
+    inicial = atualizar_semanas(pasta)
+    shutil.copyfile(os.path.join(pasta, inicial), a.saida)  # a página inicial é sempre a semana mais recente
+    print(f"Semana salva em {D['semana']}; página inicial = {inicial}")
     print(f"Relatório gerado: {ini} a {fim} · {D['K']['frotas']} caminhões · {br(TK, 0)} km · "
           f"{br(TL, 0)} L · {br(TT, 0)} t · {br(D['K']['kml'], 2)} km/L · ocioso {br(t['oc'], 1)} h ({br(D['K']['pct_oc'] * 100, 1)}%)")
     if sem:
